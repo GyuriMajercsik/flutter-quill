@@ -116,8 +116,7 @@ class RawEditorState extends EditorState
   bool _didAutoFocus = false;
   bool _keyboardVisible = false;
   DefaultStyles? _styles;
-  final ClipboardStatusNotifier? _clipboardStatus =
-      kIsWeb ? null : ClipboardStatusNotifier();
+  final ClipboardStatusNotifier _clipboardStatus = ClipboardStatusNotifier();
   final LayerLink _toolbarLayerLink = LayerLink();
   final LayerLink _startHandleLayerLink = LayerLink();
   final LayerLink _endHandleLayerLink = LayerLink();
@@ -673,7 +672,7 @@ class RawEditorState extends EditorState
   void initState() {
     super.initState();
 
-    _clipboardStatus?.addListener(_onChangedClipboardStatus);
+    _clipboardStatus.addListener(_onChangedClipboardStatus);
 
     widget.controller.addListener(_didChangeTextEditingValue);
 
@@ -874,8 +873,9 @@ class RawEditorState extends EditorState
     widget.focusNode.removeListener(_handleFocusChanged);
     _focusAttachment!.detach();
     _cursorCont.dispose();
-    _clipboardStatus?.removeListener(_onChangedClipboardStatus);
-    _clipboardStatus?.dispose();
+    _clipboardStatus
+      ..removeListener(_onChangedClipboardStatus)
+      ..dispose();
     super.dispose();
   }
 
@@ -949,7 +949,7 @@ class RawEditorState extends EditorState
         this,
         DragStartBehavior.start,
         null,
-        _clipboardStatus!,
+        _clipboardStatus,
       );
       _selectionOverlay!.handlesVisible = _shouldShowSelectionHandles();
       _selectionOverlay!.showHandles();
@@ -1026,8 +1026,12 @@ class RawEditorState extends EditorState
   }
 
   @override
-  void hideToolbar() {
-    if (getSelectionOverlay()?.toolbar != null) {
+  void hideToolbar([bool hideHandles = true]) {
+    if (hideHandles) {
+      // Hide the handles and the toolbar.
+      getSelectionOverlay()?.hide();
+    } else {
+      // Hide only the toolbar but not the handles.
       getSelectionOverlay()?.hideToolbar();
     }
   }
@@ -1127,6 +1131,20 @@ class RawEditorState extends EditorState
     } else if (!widget.focusNode.hasFocus) {
       closeConnectionIfNeeded();
     }
+  }
+
+  @override
+  void userUpdateTextEditingValue(
+      TextEditingValue value, SelectionChangedCause cause) {
+    // Compare the current TextEditingValue with the pre-format new
+    // TextEditingValue value, in case the formatter would reject the change.
+    final shouldShowCaret =
+        widget.readOnly ? value.selection != value.selection : value != value;
+
+    if (shouldShowCaret) {
+      _showCaretOnScreen();
+    }
+    __setEditingValue(value);
   }
 }
 
