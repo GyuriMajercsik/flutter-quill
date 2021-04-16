@@ -94,29 +94,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildWelcomeEditor(BuildContext context) {
-    var quillEditor = QuillEditor(
-        controller: _controller!,
-        scrollController: ScrollController(),
-        scrollable: true,
-        focusNode: _focusNode,
-        autoFocus: false,
-        readOnly: false,
-        placeholder: 'Add content',
-        expands: false,
-        padding: EdgeInsets.zero,
-        customStyles: DefaultStyles(
-          h1: DefaultTextBlockStyle(
-              const TextStyle(
-                fontSize: 32,
-                color: Colors.black,
-                height: 1.15,
-                fontWeight: FontWeight.w300,
-              ),
-              const Tuple2(16, 0),
-              const Tuple2(0, 0),
-              null),
-          sizeSmall: const TextStyle(fontSize: 9),
-        ));
+    Widget quillEditor = QuillEditor(
+      controller: _controller!,
+      scrollController: ScrollController(),
+      scrollable: false,
+      maxHeight: 1000,
+      minHeight: 500,
+      focusNode: _focusNode,
+      autoFocus: false,
+      readOnly: false,
+      placeholder: 'Add content',
+      expands: false,
+      padding: EdgeInsets.zero,
+      customStyles: DefaultStyles(
+        h1: DefaultTextBlockStyle(
+            const TextStyle(
+              fontSize: 32,
+              color: Colors.black,
+              height: 1.15,
+              fontWeight: FontWeight.w300,
+            ),
+            const Tuple2(16, 0),
+            const Tuple2(0, 0),
+            null),
+        sizeSmall: const TextStyle(fontSize: 9),
+      ),
+    );
     if (kIsWeb) {
       quillEditor = QuillEditor(
           controller: _controller!,
@@ -144,32 +147,56 @@ class _HomePageState extends State<HomePage> {
           embedBuilder: defaultEmbedBuilderWeb);
     }
     return SafeArea(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Expanded(
-            flex: 15,
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.only(left: 16, right: 16),
-              child: quillEditor,
-            ),
-          ),
-          kIsWeb
-              ? Expanded(
-                  child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                  child: QuillToolbar.basic(
-                      controller: _controller!,
-                      onImagePickCallback: _onImagePickCallback),
-                ))
-              : Container(
-                  child: QuillToolbar.basic(
-                      controller: _controller!,
-                      onImagePickCallback: _onImagePickCallback),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Expanded(
+                  flex: 15,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.only(left: 16, right: 16),
+                          child: quillEditor,
+                        ),
+                        Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.only(left: 16, right: 16),
+                          child: quillEditor,
+                        ),
+                        Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.only(left: 16, right: 16),
+                          child: quillEditor,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-        ],
+                kIsWeb
+                    ? Expanded(
+                        child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 8),
+                        child: QuillToolbar.basic(
+                            controller: _controller!,
+                            onImagePickCallback: _onImagePickCallback),
+                      ))
+                    : Container(
+                        child: QuillToolbar.basic(
+                            controller: _controller!,
+                            onImagePickCallback: _onImagePickCallback),
+                      ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
